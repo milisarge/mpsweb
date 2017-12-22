@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# mpsweb servisi.
+
+BIN=/opt/mpsweb/mpsweb.py
+PID=/var/run/mpweb.pid
+DAEMON_USER=root
+
+. /lib/lsb/init-functions
+
+mpsweb_start() {
+  
+  if [ -s $PID ]; then
+    echo "mpsweb zaten calisiyor!"
+    exit 1
+  fi
+
+  echo "mpsweb baslatiliyor..."
+  if [ -x $BIN ]; then
+    #$BIN & echo $! > $PID
+    start-stop-daemon --start --background --pidfile $PID  --startas $BIN --make-pidfile
+  fi
+}
+
+mpsweb_stop() {
+  echo "mpsweb kapatiliyor..."
+  kill -9 $(cat $PID) && rm -rf $PID
+}
+
+mpsweb_restart() {
+  mpsweb_stop
+  sleep 3
+  mpsweb_start
+}
+
+case "$1" in
+  start)
+    mpsweb_start
+    ;;
+  stop)
+    mpsweb_stop
+    ;;
+  restart)
+    mpsweb_restart
+    ;;
+  *)
+  echo "kullanım: `basename $0` {check|start|term|stop|reload|restart|upgrade|rotate}"
+esac
