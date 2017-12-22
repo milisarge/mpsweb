@@ -7,6 +7,8 @@ if [ $1 ];then
 		install -d $_hedef/etc/nginx/ssl
 		install -d $_hedef/etc/nginx/conf.d
 		install -d $_hedef/opt
+		install -d $_hedef/srv/http/
+		cp -rf http/mpsweb $_hedef/srv/http/
 		cp -rf websocket_server *.sh $_hedef/opt/
 		cp mpsweb.servis $_hedef/etc/rc.d/init.d/mpsweb
 		[ -f mpsweb.crt ] && cp mpsweb.crt $_hedef/etc/nginx/ssl/mpsweb.crt

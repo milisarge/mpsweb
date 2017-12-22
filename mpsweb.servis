@@ -6,7 +6,6 @@ BIN=/opt/mpsweb/mpsweb.py
 PID=/var/run/mpweb.pid
 DAEMON_USER=root
 
-. /lib/lsb/init-functions
 
 mpsweb_start() {
   
@@ -44,5 +43,5 @@ case "$1" in
     mpsweb_restart
     ;;
   *)
-  echo "kullanım: `basename $0` {check|start|term|stop|reload|restart|upgrade|rotate}"
+  echo "kullanım: `basename $0` {start|stop|restart}"
 esac

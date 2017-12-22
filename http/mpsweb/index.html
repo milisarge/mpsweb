@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Milis Linux Yazılım Yönetim Paneli</title>
+<h2 style="text-align: center;">Milis Linux Yazılım Yönetim Paneli </h2>
+<meta http-equiv="content-type" contentType="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+
+<script src="/static/js/jquery-3.2.1.min.js"></script>
+<script src="/static/js/awesomplete.js"></script>
+<link rel="stylesheet" href="/static/js/awesomplete.css" />
+<script type="text/javascript">
+
+
+var abone_adres='wss://localhost:16061/sub/mps?id='
+var ws = 	   new WebSocket(abone_adres+'sistem_bilgisi');
+var ws_genel = new WebSocket(abone_adres+'genel_komut');
+var ws_indir = new WebSocket(abone_adres+'genel_komut_indirme');
+var ws3 = 	   new WebSocket(abone_adres+'paket_liste');
+var ws5 = 	   new WebSocket(abone_adres+'paket_grup_liste');
+var ws6 = 	   new WebSocket(abone_adres+'grup_paketler_liste');
+var ws4 = 	   new WebSocket(abone_adres+'paket_bilgi');
+var ws_araci = new WebSocket('ws://localhost:36060');
+
+$(document).ready(function() {
+	
+	//var list = [];
+    //new Awesomplete(document.querySelector("#paketadi"),{ list: list });
+	ws.onopen = function() {
+		document.body.style.backgroundColor = '#cfc';
+	};
+	ws_genel.onopen = function() {
+		document.body.style.backgroundColor = '#cfc';
+	};
+	ws_araci.onopen = function() {
+		ws_araci.send("pkliste");
+		ws_araci.send("pkgrupliste");
+		ws_araci.send("sistem");
+		//ws_araci.send("gunceller");
+	};
+	ws_araci.onerror=function(event){
+		alert("Mps Websocket Sunucuna Bağlanılamıyor!");
+	}
+	ws.onclose = function() {
+		document.body.style.backgroundColor = null;
+	};
+	ws.onmessage = function(event) {
+	  //console.log("---",event.data);
+	  $("#sistem").html(event.data);
+	};
+	ws_genel.onmessage = function(event) {
+	  $("#alan").html($("#alan").html()+"<br>"+event.data);
+	};
+	ws_indir.onmessage = function(event) {
+	    //console.log(event.data)
+	    if ((event.data).indexOf("......") > -1){
+			$("#indirme_panel").html(event.data);
+		}else{
+			$("#alan").html($("#alan").html()+"<br>"+event.data);
+			$("#indirme_panel").html("");
+		}
+	};
+	ws_araci.onmessage = function(event) {
+	  console.log("---",event.data);
+	  $("#alan2").html(event.data);
+	};
+	ws3.onmessage = function(event) {
+		list = event.data;
+		new Awesomplete(document.querySelector("#paketadi"),{ list: list });
+	};
+	//paket grupları verisi selectbox a yüklenecek
+	ws5.onmessage = function(event) {
+		gruplar_guncelle(event.data);
+	};
+	//bir gruba ait paket listesi verisi selectbox a yüklenecek
+	ws6.onmessage = function(event) {
+		//console.log(event.data)
+		paket_dizi = event.data.split(",");
+		$('#grup_paketler').empty();
+        for (var i = 0; i < paket_dizi.length; i++) {
+			 $('#grup_paketler').append($('<option>').text(paket_dizi[i]).attr('value', paket_dizi[i]));
+		}
+	};
+	
+	ws4.onmessage = function(event) {
+		$("#alan").html(event.data);
+	};
+	document.getElementById('ping').addEventListener("click", function(){
+		ws_araci.send("ping");
+	})
+	document.getElementById('islem').addEventListener("click", function(){
+		ws_araci.send("islem");
+	})
+	document.getElementById('temizle').addEventListener("click", function(){
+		$("#alan").html("");
+		$("#alan2").html("");
+	})
+	document.getElementById('durdur').addEventListener("click", function(){
+		ws_araci.send("ping_dur");
+	})
+	document.getElementById('gonder').addEventListener("click", function(){
+		$("#alan").html("");
+		ws_araci.send(document.getElementById('metin').value);
+	})
+	/*
+	document.querySelector('#paketadi').addEventListener('keypress', function (e) {
+		var key = e.which || e.keyCode;
+		if (key === 13) { 
+			//$("#alan").html($("#paketadi").val());	
+			ws_araci.send("pkbilgi="+$("#paketadi").val());
+		}
+	});
+	*/
+	$('#paketadi').dblclick( function(){ $(this).val(''); }); 
+	$('#paketadi').bind("change paste keyup click", function() {
+		if ($("#paketadi").val().length > 0){
+			ws_araci.send("pkbilgi="+$("#paketadi").val());
+		}
+	});
+	document.getElementById('pk_kur').addEventListener("click", function(){
+		if ($("#paketadi").val().length > 0){
+			$("#alan").html("");
+			ws_araci.send("pkkur="+$("#paketadi").val());
+		}else{
+			alert("Paket Adı Boş!")
+		}
+	})
+	document.getElementById('pk_icerik').addEventListener("click", function(){
+		if ($("#paketadi").val().length > 0){
+			$("#alan").html("");
+			ws_araci.send("pkkdl="+$("#paketadi").val());
+		}else{
+			alert("Paket Adı Boş!")
+		}
+	})
+	document.getElementById('pk_sil').addEventListener("click", function(){
+		if ($("#paketadi").val().length > 0){
+			$("#alan").html("");
+			ws_araci.send("pksil="+$("#paketadi").val());
+		}else{
+			alert("Paket Adı Boş!")
+		}
+	})
+	document.getElementById('pk_talimat').addEventListener("click", function(){
+		if ($("#paketadi").val().length > 0){
+			$("#alan").html("");
+			ws_araci.send("pktalimat="+$("#paketadi").val());
+		}else{
+			alert("Paket Adı Boş!")
+		}
+	})
+	// bir gruba ait paketlerden biri seçildiği zaman
+	$( "#grup_paketler" ).change(function() {
+		var secim = $(this).find("option:selected");
+		var secimDeger  = secim.val();
+		var secimMetin  = secim.text();
+		$("#paketadi").val(secimDeger);
+		ws_araci.send("pkbilgi="+secimDeger);
+	});
+	// bir grup seçildiği zaman
+	$( "#gruplar" ).change(function() {
+		var secim = $(this).find("option:selected");
+		var secimDeger  = secim.val();
+		var secimMetin  = secim.text();
+		ws_araci.send("grup_paketler="+secimDeger);
+	});
+	
+});
+function gruplar_guncelle(veri){
+	grup_dizi = veri.split(",");
+	$('#gruplar').empty();
+	for (var i = 0; i < grup_dizi.length; i++) {
+		 $('#gruplar').append($('<option>').text(grup_dizi[i]).attr('value', grup_dizi[i]));
+	}
+}
+</script>
+<style>
+	#ust_yerleske {
+		text-align:center;
+	}
+	#yerleske {
+		text-align:center;
+	}
+	#alan {
+		background-color: black;
+		color: white;
+		text-align: left;
+		margin: auto;
+		padding: 10px;
+		overflow:scroll;
+		height:390px;
+		width:980px;
+		float:right;
+	}
+	#indirme_panel {
+		background-color: black;
+		color: red;
+		text-align: left;
+		margin: auto;
+		padding: 10px;
+		height:10px;
+		width:980px;
+		float:right;
+	}
+	grup_paketler.icon-menu option {
+		background-repeat:no-repeat;
+		background-position:bottom left;
+		padding-left:16px;
+	}
+	#gruplar {
+		background-color: black;
+		color: green;
+		font-size: 18px;
+		width: 190px;
+	}
+	#grup_paketler {
+		background-color: black;
+		color: white;
+		font-size: 20px;
+		width: 190px;
+	}
+	#grup_alan {
+		background-color: black;
+		color: green;
+		text-align: left;
+		margin: auto;
+		padding: 10px;
+		overflow:scroll;
+		height:400px;
+		width:200px;
+		float:left;
+	}
+	.arama_kutusu {
+		width:300px;
+		color: black;
+	}
+	.is_dugme {
+		width: 100px;
+		margin-top: 10px;
+		margin-left: 10px;
+		padding:0.2em
+	}
+	#islemler {
+		text-align:left;
+	}
+	#islemler_ana {
+		text-align:center;
+		float:left;
+	}
+	/*table {
+		margin: 0 auto; /* or margin: 0 auto 0 auto */
+	}*/
+</style>
+
+
+<div><input hidden id="metin" placeholder="komut giriniz"><button hidden id="gonder">gonder</button></div>
+<div></div>
+<div class='ust_yerleske' id='ust_yerleske'>
+	<input id="paketadi" name="paketadi" type="text" class="arama_kutusu" placeholder="aradığınız paket ismini giriniz"><p>
+	<div id='yerleske'>
+		<div id='grup_alan'>
+			<label>Paket Grupları</label><p>
+			<select id="gruplar" name="gruplar" class="icon-menu"><option selected="selected"></option></select>
+			<select name='grup_paketler' id='grup_paketler' size='10' multiple='multiple'>
+			</select>            
+		</div>
+		<div id=pano>
+			<div id=indirme_panel></div>
+			<div id='alan'></div>
+		</div>
+		<div id='islemler_ana'>
+			<button class="is_dugme" id="sistem_guncelle">guncelle</button>
+			<button class="is_dugme" id="sistem_yukselt">yukselt</button>
+			<button class="is_dugme" id="ping">ping</button>
+			<button class="is_dugme" id="islem">test</button>
+			<button class="is_dugme" id="durdur">Durdur</button>
+			<button class="is_dugme" id="temizle">Temizle</button>
+		</div>
+	</div>
+	<div id='islemler'>
+		<button class="is_dugme" id="pk_kur">kur</button>
+		<button class="is_dugme" id="pk_sil">sil</button>
+		<button class="is_dugme" id="pk_gun">guncelle</button>
+		<button class="is_dugme" id="pk_serkur">servis_kur</button>
+		<button class="is_dugme" id="pk_sersil">servis_sil</button>
+		<button class="is_dugme" id="pk_serbas">servis_baş</button>
+		<button class="is_dugme" id="pk_serdur">servis_dur</button>
+		<button class="is_dugme" id="pk_icerik">paket_içerik</button>
+		<button class="is_dugme" id="pk_talimat">talimat</button>
+	</div>
+	<div hidden id='alan2'></div>
+	<div id='sistem' style="center"></div>
+	<div id='indirme'></div>
+</div>
+</head>
+</html>
