@@ -1,3 +1,4 @@
 __pycache__/*
 websocket_server/__pycache__/*
 eski/*
+*.pyc
