@@ -78,6 +78,8 @@ def gelen_mesaj(istemci, sunucu, mesaj):
 		mps.bilgi(paket)
 		mps.kos()
 		dosya_iletim("paket_bilgi","/tmp/mps_paket_bilgi_"+paket+".html")
+	if "sistem_yukselt" in mesaj :
+		genel_iletim(genel_kanal,mps.yukselt())
 	if "pktalimat=" in mesaj :
 		paket=mesaj.split("=")[1]
 		genel_iletim(genel_kanal,mps.talimat(paket))

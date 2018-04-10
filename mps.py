@@ -63,6 +63,11 @@ class MpsIslev():
 			renkdurum="--html"
 		self.aktif_komut=["mps","-b",paket,renkdurum]
 		return self.aktif_komut
+	
+	def yukselt(self):
+		self.aktif_komut=["mps","yukselt"]
+		komut="%s %s" % ("mps","yukselt")
+		return komut
 		
 	def tr_cevir(self,cikti):
 		return cikti.decode('utf-8')

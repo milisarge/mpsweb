@@ -149,6 +149,9 @@ $(document).ready(function() {
 			alert("Paket Adı Boş!")
 		}
 	})
+	document.getElementById('sistem_yukselt').addEventListener("click", function(){
+		ws_araci.send("sistem_yukselt");
+	})
 	// bir gruba ait paketlerden biri seçildiği zaman
 	$( "#grup_paketler" ).change(function() {
 		var secim = $(this).find("option:selected");
