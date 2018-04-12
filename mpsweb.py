@@ -24,6 +24,7 @@ from websocket_server import WebsocketServer
 import os
 import json
 from mps import MpsIslev
+import subprocess
 
 kamusal_soket="https://localhost:16060/pub/mps?"
 sertifika='/etc/nginx/ssl/mpsweb.crt'
@@ -96,7 +97,8 @@ def gelen_mesaj(istemci, sunucu, mesaj):
 		komut="mps -kdl "+paket+" --normal"
 		genel_iletim(genel_kanal,komut)
 	if mesaj == "pkliste":
-		os.system("mps paketler --json")
+		#os.system("mps paketler --json")
+		subprocess.call(['mps','paketler', '--json'])
 		dosya_iletim("paket_liste","/tmp/mps_paketler_listesi")
 	if mesaj == "pkgrupliste":
 		mps.gruplar()
